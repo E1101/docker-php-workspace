@@ -1,0 +1,64 @@
+version: '3'
+
+volumes:
+  vol-share:
+
+
+services:
+  ## --------------------------------------------
+  ## | Web Server Php7 and required Extensions
+  ## --------------------------------------------
+  web:
+    build:
+      context: ./.docker-compose/web
+      dockerfile: Dockerfile
+      args:
+        # none-root user
+        - PUID=${WEB_PUID}
+        - PGID=${WEB_PGID}
+        # xdebug
+        - INSTALL_XDEBUG=${WEB_INSTALL_XDEBUG}
+        # mongodb
+        - INSTALL_PHP_MONGODB=${WEB_INSTALL_PHP_MONGODB}
+        - INSTALL_PHP_MONGODB_VER=${WEB_INSTALL_PHP_MONGODB_VER}
+        # nodejs
+        - INSTALL_NODE=${WEB_INSTALL_NODE}
+    environment:
+      - HOST_IP=${HOST_IP}
+      - WEB_INSTALL_XDEBUG=${WEB_INSTALL_XDEBUG}
+    expose:
+      - "80"
+      - "443"
+    ports:
+      - "${WEB_HTTP_PORT}:80"
+      - "${WEB_HTTPS_PORT}:443"
+    volumes:
+      - ${APPLICATION}:/var/www:cached
+      - vol-share:/v-share/
+
+  ## --------------------------------------------
+  ## | Redis Server
+  ## --------------------------------------------
+  redis:
+    build:
+      context: ./.docker-compose/redis
+      dockerfile: Dockerfile
+    image: aly-web-db-redis
+    restart: unless-stopped
+    expose:
+     - "6379"
+    volumes:
+      - vol-share:/v-share/
+
+  ## On Host Server
+  ##   $ sysctl vm.overcommit_memory=1
+  ##
+  ##   add it to your /etc/rc.local in order to retain the setting after a reboot.
+  ##   $ echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
+  ##   $ echo never | sudo tee /sys/kernel/mm/transparent_hugepage/defrag
+  ##
+  ## $ redis-cli
+  ##   CONFIG SET dir "/data"
+  ##   CONFIG SET dbfilename dump.rdb
+  ##   CONFIG SET stop-writes-on-bgsave-error no
+

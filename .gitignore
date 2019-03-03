@@ -1,0 +1,17 @@
+.buildpath
+.DS_Store
+.idea
+.vagrant
+.project
+.settings/
+.*.sw*
+.*.un~
+build/
+nbproject
+
+.env
+
+tmp/
+app/**
+
+docker-compose.local.yml

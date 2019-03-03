@@ -1,0 +1,109 @@
+# --------------------------------------------------------------------
+# | Build Image:
+# |   git clone https://github.com/E1101/nginx-php-fpm && cd nginx-php-fom
+# |   docker build -t nginx-php-fpm:latest .
+# |
+# |
+FROM nginx-php-fpm:latest
+
+ENV MONGODB_VERSION=1.2.9
+
+ENV PHPIZE_DEPS \
+    autoconf \
+    cmake \
+    file \
+    g++ \
+    gcc \
+    libc-dev \
+    pcre-dev \
+    make \
+    git \
+    pkgconf \
+    re2c
+
+RUN apk update && apk add --no-cache --virtual .persistent-deps \
+    # for intl extension
+    icu-dev \
+    # for mcrypt extension
+    libmcrypt-dev \
+    # for mongodb
+    libssl1.0 \
+    # for soap
+    libxml2-dev
+
+## Install MongoDriver
+#
+RUN apk add --virtual .build-deps \
+       $PHPIZE_DEPS \
+       openssl-dev
+
+
+RUN MONGODB_FILENAME="mongodb-${MONGODB_VERSION}" \
+    && MONGODB_SOURCE="https://github.com/mongodb/mongo-php-driver/releases/download/${MONGODB_VERSION}/${MONGODB_FILENAME}.tgz" \
+    && curl -fSL --connect-timeout 30 ${MONGODB_SOURCE} | tar xz -C /tmp \
+    && cd /tmp/${MONGODB_FILENAME} \
+    && phpize \
+    && ./configure \
+    && make \
+    && make install \
+    && docker-php-ext-enable mongodb
+
+
+## Install Xdebug
+#
+RUN git clone --depth 1 "https://github.com/xdebug/xdebug" \
+ && cd xdebug \
+ && phpize \
+ && ./configure \
+ && make \
+ && make install
+ #cp modules/xdebug.so /usr/lib/php/extensions/no-debug-non-zts-20090626
+
+
+## cleanup
+#
+RUN apk del .build-deps
+
+
+ADD nginx/nginx-site.conf /etc/nginx/sites-enabled/default.conf
+
+
+## --------------------------------------------
+## | Setup Poirot
+## --------------------------------------------
+
+COPY ["./scripts/", "/docker/bin/"]
+COPY ["./skeleton/config/", "/docker/config/"]
+
+ADD nginx/scripts/run.sh /docker/bin/run.sh
+ADD nginx/scripts/bootup.sh /docker/bin/bootup.sh
+
+## compatible with windows
+RUN chmod a+x /docker/bin/*.sh \
+    && sed -i -e 's/\r$//' /docker/bin/*.sh \
+    && ln -s /docker/bin/update.sh /usr/local/bin/update \
+    && ln -s /docker/bin/bootup.sh /usr/local/bin/bootup \
+    && ln -s /docker/bin/sync.sh /usr/local/bin/sync
+
+ENV PATH="$PATH:/docker/bin/"
+
+
+## --------------------------------------------
+## | Setup Crons
+## --------------------------------------------
+
+RUN apk update && apk add dcron \
+    && rm -rf /var/cache/apk/*
+
+RUN mkdir -p /var/log/cron \
+    && touch /var/log/cron/cron.log \
+    && mkdir -m 0644 -p /etc/cron.d
+
+
+COPY ["./etc/cron.d/", "/etc/cron.d/"]
+# Give execution rights on the cron job
+# Create the log file to be able to run tail
+RUN chmod -R 0644 /etc/cron.d/.
+
+WORKDIR /var/www/html
+CMD ["/docker/bin/run.sh"]
