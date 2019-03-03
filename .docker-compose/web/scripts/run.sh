@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Set Environment From Docker To Global Bash
-WEB_INSTALL_XDEBUG=$(bash -c 'echo "${WEB_INSTALL_XDEBUG?false}"')
+INSTALL_XDEBUG=$(bash -c 'echo "${INSTALL_XDEBUG?false}"')
 HOST_IP=$(bash -c 'echo "${HOST_IP?false}"')
 
 

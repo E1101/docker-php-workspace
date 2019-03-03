@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Set Environment From Docker To Global Bash
-WEB_INSTALL_XDEBUG=$(bash -c 'echo "${WEB_INSTALL_XDEBUG?false}"')
+INSTALL_XDEBUG=$(bash -c 'echo "${INSTALL_XDEBUG?false}"')
 HOST_IP=$(bash -c 'echo "${HOST_IP?false}"')
 
 
@@ -10,7 +10,7 @@ printf "\033[0;32m > Initialize Container ...\n\n"
 
 PHPCONF="/usr/local/etc/php/conf.d/xdebug.ini"
 
-if [[ "${WEB_INSTALL_XDEBUG:?}" == "true" ]]; then
+if [[ "${INSTALL_XDEBUG:?}" == "true" ]]; then
 
     HAS_XDEBUG=$(php -r "echo (extension_loaded('xdebug') ? '' : 'non ')")
     if [[ "${HAS_XDEBUG:?}" == "non" ]]; then

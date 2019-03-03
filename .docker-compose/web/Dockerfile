@@ -38,6 +38,10 @@ RUN apk update && apk add --no-cache --virtual \
 ENV PUID ${PUID}
 ENV PGID ${PGID}
 
+RUN addgroup -g "$PGID" -S myuser \
+    && adduser -u "$PUID" -G myuser -S myuser
+
+
 
 RUN printf "\033[0;32m >> update phpize dependencies ...\n" \
     && printf "\033[0m\n" \

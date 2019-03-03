@@ -25,7 +25,8 @@ services:
         - INSTALL_NODE=${WEB_INSTALL_NODE}
     environment:
       - HOST_IP=${HOST_IP}
-      - WEB_INSTALL_XDEBUG=${WEB_INSTALL_XDEBUG}
+      - APPLICATION=${APPLICATION}
+      - INSTALL_XDEBUG=${WEB_INSTALL_XDEBUG}
     expose:
       - "80"
       - "443"
