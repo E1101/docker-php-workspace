@@ -31,7 +31,6 @@ ENV PHPIZE_DEPS \
 RUN apk update && apk add --no-cache --virtual \
     git
 
-
 ## Non-Root User:
 ## -----------------------------------------------------------------------------------------
 # Add a non-root user to prevent files being created with root permissions on host machine.
@@ -41,6 +40,11 @@ ENV PGID ${PGID}
 RUN addgroup -g "$PGID" -S myuser \
     && adduser -u "$PUID" -G myuser -S myuser
 
+# fix nginx/php user permission
+RUN echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories
+RUN apk --no-cache add shadow
+RUN usermod -o -u "$PUID" www-data \
+    && usermod -o -u "$PUID" nginx
 
 
 RUN printf "\033[0;32m >> update phpize dependencies ...\n" \
