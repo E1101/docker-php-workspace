@@ -38,6 +38,8 @@ services:
     volumes:
       - ${APPLICATION}:/var/www:cached
       - vol-share:/v-share/
+      # change default site(s) configuration bt mount your local folder.
+      #- ./.docker-compose/web/nginx/sites/:/etc/nginx/sites-available/
 
   ## --------------------------------------------
   ## | Redis Server
